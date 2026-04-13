@@ -1,0 +1,1156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HousePoints</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f; --surface: #18181c; --surface2: #202026; --border: #2a2a30;
+  --gold: #f5c542; --blue: #4a9eff; --pink: #ff6eb4; --green: #3ddc84;
+  --red: #ff5555; --muted: #666; --muted2: #999; --text: #f0f0f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; padding-bottom: 80px; }
+
+/* LOADING */
+#loading-screen {
+  position: fixed; inset: 0; background: var(--bg); z-index: 999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+#loading-screen h2 { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 4px; color: var(--gold); }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* NAV */
+.nav { display: grid; grid-template-columns: repeat(5,1fr); position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); z-index: 100; }
+.nav-btn { background: none; border: none; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.65rem; letter-spacing: 1px; padding: 10px 0 8px; text-transform: uppercase; transition: color 0.2s; }
+.nav-btn.active { color: var(--gold); }
+.nav-btn .icon { font-size: 1.3rem; }
+
+/* PAGES */
+.page { display: none; padding: 20px 16px 16px; }
+.page.active { display: block; }
+
+/* HEADER */
+.page-header { text-align: center; margin-bottom: 22px; }
+.page-header h1 { font-family: 'Bebas Neue', sans-serif; font-size: 2.6rem; letter-spacing: 4px; color: var(--gold); line-height: 1; }
+.page-header p { color: var(--muted); font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* SCOREBOARD */
+.scoreboard { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 16px; margin-bottom: 16px; }
+.player { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.player-lbl { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+.player-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 2px; }
+.player-score { font-family: 'Bebas Neue', sans-serif; font-size: 4rem; line-height: 1; transition: transform 0.2s; }
+.player-score.bump { transform: scale(1.25); }
+.crown { font-size: 1.3rem; min-height: 26px; display: flex; align-items: center; justify-content: center; }
+.vs { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--muted); letter-spacing: 2px; }
+.streak-display { font-size: 0.7rem; color: var(--muted2); min-height: 16px; text-align: center; }
+.leader-banner { text-align: center; padding: 9px; border-radius: 8px; font-size: 0.76rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; transition: background 0.4s; }
+.leader-banner.tied { background: rgba(245,197,66,0.10); color: var(--gold); }
+.leader-banner.p1-leads { background: rgba(74,158,255,0.10); color: var(--blue); }
+.leader-banner.p2-leads { background: rgba(255,110,180,0.10); color: var(--pink); }
+
+/* CARD */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+.card-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; color: var(--muted); margin-bottom: 12px; }
+
+/* FORM */
+.form-row { display: flex; flex-direction: column; gap: 9px; }
+.form-row input, .form-row select { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.88rem; padding: 10px 13px; outline: none; transition: border-color 0.2s; width: 100%; }
+.form-row input:focus, .form-row select:focus { border-color: var(--gold); }
+.form-row select option { background: #1a1a1e; }
+.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.btn { border: none; border-radius: 8px; cursor: pointer; font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 1.5px; padding: 11px; transition: opacity 0.2s, transform 0.1s; }
+.btn:active { transform: scale(0.97); }
+.btn-p1 { background: var(--blue); color: #000; }
+.btn-p2 { background: var(--pink); color: #000; }
+.btn-sm { font-size: 0.72rem; padding: 5px 11px; border-radius: 6px; cursor: pointer; border: 1px solid var(--border); background: none; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; transition: color 0.2s, border-color 0.2s; font-family: 'DM Sans', sans-serif; }
+.btn-sm:hover { color: var(--red); border-color: var(--red); }
+.btn-sm.ok { color: var(--green); border-color: var(--green); }
+.btn-sm.ok:hover { background: rgba(61,220,132,0.08); }
+
+/* CHIPS */
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--text); cursor: pointer; font-size: 0.76rem; padding: 5px 11px; transition: background 0.15s, border-color 0.15s; }
+.chip:hover { border-color: var(--gold); background: rgba(245,197,66,0.08); }
+
+/* LOG */
+.log-list { display: flex; flex-direction: column; gap: 7px; }
+.log-empty { color: var(--muted); font-size: 0.83rem; text-align: center; padding: 18px 0; }
+.log-item { display: flex; align-items: center; justify-content: space-between; background: var(--bg); border-radius: 8px; padding: 9px 13px; animation: slideIn 0.22s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
+.log-left { display: flex; align-items: center; gap: 9px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.dot-p1 { background: var(--blue); }
+.dot-p2 { background: var(--pink); }
+.log-chore { font-size: 0.86rem; font-weight: 500; }
+.log-meta { font-size: 0.72rem; color: var(--muted); }
+.log-right { display: flex; align-items: center; gap: 8px; }
+.log-pts { font-family: 'Bebas Neue', sans-serif; font-size: 0.95rem; letter-spacing: 1px; }
+.pts-p1 { color: var(--blue); }
+.pts-p2 { color: var(--pink); }
+.del-btn { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.85rem; padding: 2px 4px; transition: color 0.2s; }
+.del-btn:hover { color: var(--red); }
+
+/* BARS */
+.bar-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.bar-label { font-size: 0.78rem; display: flex; justify-content: space-between; }
+.bar-track { background: var(--bg); border-radius: 4px; height: 7px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+.fill-p1 { background: var(--blue); }
+.fill-p2 { background: var(--pink); }
+
+/* HISTORY */
+.week-block { margin-bottom: 20px; }
+.week-block-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 8px; margin-bottom: 10px; }
+.week-label-txt { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 2px; color: var(--muted2); }
+.week-tally { display: flex; gap: 12px; font-size: 0.78rem; }
+.tally-c { color: var(--blue); font-weight: 600; }
+.tally-w { color: var(--pink); font-weight: 600; }
+.filter-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.filter-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--muted); cursor: pointer; font-size: 0.74rem; padding: 4px 12px; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+.filter-chip.active { border-color: var(--gold); color: var(--gold); background: rgba(245,197,66,0.08); }
+.history-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+.stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 10px; text-align: center; }
+.stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 1.8rem; line-height: 1; }
+.stat-lbl { font-size: 0.65rem; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-top: 2px; }
+
+/* SCHEDULE */
+.day-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; overflow: hidden; }
+.day-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; cursor: pointer; user-select: none; }
+.day-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.15rem; letter-spacing: 2px; }
+.day-name.today-day { color: var(--gold); }
+.day-meta-r { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--muted); }
+.day-toggle { font-size: 0.7rem; color: var(--muted); transition: transform 0.2s; display: inline-block; }
+.day-toggle.open { transform: rotate(180deg); }
+.day-body { display: none; padding: 0 16px 14px; border-top: 1px solid var(--border); }
+.day-body.open { display: block; }
+.chore-line { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.chore-line:last-of-type { border-bottom: none; }
+.chore-ll { display: flex; align-items: center; gap: 10px; }
+.chore-check { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border); background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s, border-color 0.15s; font-size: 0.7rem; color: #000; }
+.chore-check.done { background: var(--green); border-color: var(--green); }
+.chore-name-s { font-size: 0.86rem; }
+.chore-name-s.crossed { text-decoration: line-through; color: var(--muted); }
+.chore-pts-s { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; color: var(--muted); }
+.add-sched-row { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.add-sched-row input, .add-sched-row select { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; padding: 6px 10px; outline: none; flex: 1; min-width: 70px; }
+.add-sched-row input:focus, .add-sched-row select:focus { border-color: var(--gold); }
+.prog-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.prog-label { font-size: 0.72rem; color: var(--muted); min-width: 66px; }
+.prog-track { flex: 1; background: var(--bg); border-radius: 4px; height: 6px; overflow: hidden; }
+.prog-fill { height: 100%; border-radius: 4px; background: var(--green); transition: width 0.4s; }
+.log-scroll { max-height: 300px; overflow-y: auto; }
+
+/* RULES PAGE */
+.rules-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; }
+.rules-table th { font-family: 'Bebas Neue', sans-serif; font-size: 0.85rem; letter-spacing: 1.5px; color: var(--muted); text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.rules-table td { padding: 7px 8px; border-bottom: 1px solid var(--border); color: var(--text); }
+.rules-table tr:last-child td { border-bottom: none; }
+.pts-cell { font-family: 'Bebas Neue', sans-serif; color: var(--gold); text-align: right; white-space: nowrap; }
+.notes-cell { color: var(--muted2); font-size: 0.78rem; line-height: 1.4; }
+/* AGREEMENT COLLAPSIBLES */
+.agreement-article { border-bottom: 1px solid var(--border); }
+.agreement-article:last-of-type { border-bottom: none; }
+.article-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; cursor: pointer; user-select: none; font-size: 0.84rem; font-weight: 600; color: var(--text); gap: 10px; }
+.article-header:hover { color: var(--gold); }
+.article-toggle { font-size: 0.65rem; color: var(--muted); transition: transform 0.2s; flex-shrink: 0; }
+.article-toggle.open { transform: rotate(180deg); }
+.article-body { display: none; padding-bottom: 14px; }
+.article-body.open { display: block; }
+.callout-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; }
+.callout-card .callout-title { font-family: 'Bebas Neue', sans-serif; font-size: 1rem; letter-spacing: 2px; color: var(--gold); margin-bottom: 8px; }
+.callout-card p { font-size: 0.84rem; color: var(--text); line-height: 1.5; margin-bottom: 4px; }
+.callout-steps { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.callout-steps span { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 0.78rem; color: var(--muted2); }
+.tiers-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.tier-col { background: var(--bg); border-radius: 10px; padding: 10px 8px; }
+.tier-header { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; letter-spacing: 2px; text-align: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.tier-item { font-size: 0.73rem; color: var(--muted2); padding: 3px 0; line-height: 1.4; }
+.rules-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.rules-list li { font-size: 0.84rem; color: var(--text); padding-left: 18px; position: relative; line-height: 1.5; }
+.rules-list li::before { content: '•'; position: absolute; left: 4px; color: var(--gold); }
+
+/* SYNC BADGE */
+.sync-badge { position: fixed; top: 12px; right: 14px; font-size: 0.65rem; padding: 3px 8px; border-radius: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--muted); z-index: 50; transition: all 0.3s; }
+.sync-badge.syncing { border-color: var(--gold); color: var(--gold); }
+.sync-badge.error   { border-color: var(--red);  color: var(--red); }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <h2>HousePoints</h2>
+</div>
+
+<!-- SYNC BADGE -->
+<div class="sync-badge" id="sync-badge">✓ synced</div>
+
+<!-- ══════════ SCOREBOARD ══════════ -->
+<div class="page active" id="page-score">
+  <div class="page-header">
+    <h1>HousePoints</h1>
+    <p id="week-label-top">Week of —</p>
+  </div>
+  <div class="scoreboard">
+    <div class="player">
+      <div class="crown" id="crown-p1"></div>
+      <div class="player-name" style="color:var(--blue)" id="p1-name-score">Player 1</div>
+      <div class="player-score" id="score-p1">0</div>
+      <div class="player-lbl" id="tasks-p1">0 chores</div>
+      <div class="streak-display" id="streak-p1"></div>
+    </div>
+    <div class="vs">VS</div>
+    <div class="player">
+      <div class="crown" id="crown-p2"></div>
+      <div class="player-name" style="color:var(--pink)" id="p2-name-score">Player 2</div>
+      <div class="player-score" id="score-p2">0</div>
+      <div class="player-lbl" id="tasks-p2">0 chores</div>
+      <div class="streak-display" id="streak-p2"></div>
+    </div>
+  </div>
+  <div class="leader-banner tied" id="leader-banner">⚖️ Tied — may the best person win</div>
+  <div class="card" id="week-summary" style="margin-bottom:16px"></div>
+
+  <div class="card">
+    <div class="card-title">+ Log a Chore</div>
+    <div class="form-row">
+      <input type="text" id="chore-input" placeholder="What chore was done?" />
+      <select id="points-select">
+        <option value="1">1 pt — Quick (feed cat, litter, wipe counters, trash)</option>
+        <option value="2" selected>2 pts — Medium (dishes, cook, laundry, vacuum)</option>
+        <option value="3">3 pts — Big job (kids bath, deep clean, groceries)</option>
+      </select>
+    </div>
+    <div class="btn-row" style="margin-top:10px">
+      <button class="btn btn-p1" onclick="logChore(p1Key)">+ <span id="log-btn-p1">Player 1</span></button>
+      <button class="btn btn-p2"   onclick="logChore(p2Key)">+ <span id="log-btn-p2">Player 2</span></button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Quick Add</div>
+    <div class="chips" id="quick-chips"></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div class="card-title" style="margin-bottom:0">This Week's Log</div>
+      <button class="btn-sm" onclick="resetWeek()">Reset Week</button>
+    </div>
+    <div class="log-scroll"><div class="log-list" id="week-log"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Effort Split</div>
+    <div class="bar-row">
+      <div class="bar-label"><span style="color:var(--blue)" id="p1-bar-lbl">Player 1</span><span id="pct-p1">0%</span></div>
+      <div class="bar-track"><div class="bar-fill fill-p1" id="bar-p1" style="width:0%"></div></div>
+    </div>
+    <div class="bar-row">
+      <div class="bar-label"><span style="color:var(--pink)" id="p2-bar-lbl">Player 2</span><span id="pct-p2">0%</span></div>
+      <div class="bar-track"><div class="bar-fill fill-wife" id="bar-p2" style="width:0%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ HISTORY ══════════ -->
+<div class="page" id="page-history">
+  <div class="page-header"><h1>Full Log</h1><p>Everything logged, ever</p></div>
+  <div class="history-stats">
+    <div class="stat-box"><div class="stat-val" id="stat-total">0</div><div class="stat-lbl">Total Chores</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--blue)" id="stat-p1">0</div><div class="stat-lbl" id="stat-p1-lbl">P1 Pts</div></div>
+    <div class="stat-box"><div class="stat-val" style="color:var(--pink)" id="stat-p2">0</div><div class="stat-lbl" id="stat-p2-lbl">P2 Pts</div></div>
+  </div>
+  <div class="filter-row">
+    <div class="filter-chip active" onclick="setFilter('all',this)">All</div>
+    <div class="filter-chip p1-filter-chip" onclick="setFilter(p1Key,this)">Player 1</div>
+    <div class="filter-chip p2-filter-chip" onclick="setFilter(p2Key,this)">Player 2</div>
+    <div class="filter-chip" onclick="setFilter('week',this)">This Week</div>
+  </div>
+  <div id="history-content"></div>
+</div>
+
+<!-- ══════════ SCHEDULE ══════════ -->
+<div class="page" id="page-schedule">
+  <div class="page-header"><h1>Schedule</h1><p>Who does what, and when</p></div>
+  <div class="card">
+    <div class="card-title">Today's Progress</div>
+    <div id="today-progress"></div>
+  </div>
+  <div id="schedule-days"></div>
+</div>
+
+<!-- ══════════ RULES ══════════ -->
+<div class="page" id="page-rules">
+  <div class="page-header"><h1>Rules</h1><p>How points work</p></div>
+
+  <div class="card">
+    <div class="card-title">Point Tiers</div>
+    <div class="tiers-grid" id="rules-tiers"></div>
+  </div>
+
+  <div class="callout-card">
+    <div class="callout-title">🫧 Laundry Amendment</div>
+    <p>Points are awarded per stage. Whoever completes each stage logs it independently. Starting a wash and walking away does not entitle you to fold-and-put-away credit.</p>
+    <table class="rules-table" style="margin-top:10px">
+      <thead><tr><th>Stage</th><th>Pts</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>🫧 Wash + move to dryer</td><td class="pts-cell">1pt</td><td class="notes-cell">Start machine and transfer when done</td></tr>
+        <tr><td>👕 Fold</td><td class="pts-cell">1pt</td><td class="notes-cell">Actually folding — not leaving in the dryer</td></tr>
+        <tr><td>🗂️ Put Away</td><td class="pts-cell">1pt</td><td class="notes-cell">Into drawers/closet — <strong>not the bedroom chair</strong></td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);font-size:0.76rem;margin-top:8px;font-style:italic">Full cycle (all 3 stages, one person) = 3pts total.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Kids Duties</div>
+    <table class="rules-table">
+      <thead><tr><th>Duty</th><th>Pts</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>🛁 Kids Bath + Bedtime</td><td class="pts-cell">3pt</td><td class="notes-cell">Full routine — bath, dry, pajamas, bed</td></tr>
+        <tr><td>🛌 Kids Bedtime Only</td><td class="pts-cell">2pt</td><td class="notes-cell">Routine without bath</td></tr>
+        <tr><td>🏫 School Drop-off</td><td class="pts-cell">2pt</td><td class="notes-cell">Getting kids ready AND dropping off</td></tr>
+        <tr><td>🏫 School Pick-up</td><td class="pts-cell">1pt</td><td class="notes-cell">Pick-up only, no prep involved</td></tr>
+        <tr><td>🏫 School Drop-off + Prep</td><td class="pts-cell">3pt</td><td class="notes-cell">Lunches, bags, dressed, dropped off</td></tr>
+        <tr><td>🍱 Kids Lunch</td><td class="pts-cell">1pt</td><td class="notes-cell">Simple foods. Counts separately from drop-off prep</td></tr>
+        <tr><td>📅 Schedule Appointment</td><td class="pts-cell">1pt</td><td class="notes-cell">Phone call or online booking only</td></tr>
+        <tr><td>🏥 Take to Appointment</td><td class="pts-cell">2pt</td><td class="notes-cell">Drive, wait, and manage kid the whole time</td></tr>
+        <tr><td>🚗 Recurring Activity Drop</td><td class="pts-cell">1pt</td><td class="notes-cell">Drop off and pick up — no waiting required</td></tr>
+        <tr><td>🎯 Stay for Activity</td><td class="pts-cell">2pt</td><td class="notes-cell">Sit through full practice, class, or game</td></tr>
+        <tr><td>🎉 Kids Outing</td><td class="pts-cell">3pt</td><td class="notes-cell">Plan + execute — park, event, etc.</td></tr>
+        <tr><td>🏠 Host Playdate</td><td class="pts-cell">2pt</td><td class="notes-cell">Managing multiple kids at your home</td></tr>
+        <tr><td>🚗 Drop-off Playdate</td><td class="pts-cell">1pt</td><td class="notes-cell">Drive only, no supervision involved</td></tr>
+        <tr><td>🚨 Emergency Kid Errand</td><td class="pts-cell">2pt</td><td class="notes-cell">Sick pickup, forgotten item — disrupts your day</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);font-size:0.74rem;margin-top:10px;font-style:italic">Points stack independently — scheduling (1pt) and taking to appointment (2pt) can be logged by different people.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Floors &amp; Heavy Work</div>
+    <table class="rules-table">
+      <thead><tr><th>Chore</th><th>Pts</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>🧹 Sweep (one room)</td><td class="pts-cell">1pt</td><td class="notes-cell">Kitchen or one area, under 10 min</td></tr>
+        <tr><td>🧹 Sweep + Mop</td><td class="pts-cell">2pt</td><td class="notes-cell">Full floor treatment, takes real time</td></tr>
+        <tr><td>🧺 Vacuum</td><td class="pts-cell">2pt</td><td class="notes-cell">Whole house, lugging vacuum around</td></tr>
+        <tr><td>🪑 Move Small Furniture</td><td class="pts-cell">1pt</td><td class="notes-cell">Chair, side table — one person, quick</td></tr>
+        <tr><td>🛋️ Move Large Furniture</td><td class="pts-cell">3pt</td><td class="notes-cell">Couch, dresser — heavy, takes planning</td></tr>
+        <tr><td>🔧 Deconstruct / Assemble</td><td class="pts-cell">3pt</td><td class="notes-cell">Bed frame, IKEA builds, takes an hour+</td></tr>
+        <tr><td>🏡 Full Room Rearrange</td><td class="pts-cell">3pt</td><td class="notes-cell">Multiple pieces, extended effort</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Weekly Stakes</div>
+    <table class="rules-table">
+      <thead><tr><th>Gap</th><th>Winner Gets</th><th>Loser Owes</th></tr></thead>
+      <tbody id="stakes-tbody">
+        <tr><td>1–3 pts</td><td>—</td><td>—</td></tr>
+        <tr><td>4–7 pts</td><td>—</td><td>—</td></tr>
+        <tr><td>8+ pts</td><td>—</td><td>—</td></tr>
+      </tbody>
+    </table>
+    <p style="color:var(--muted);font-size:0.74rem;margin-top:10px;font-style:italic">Stakes may be renegotiated before the week begins. Renegotiation after end-of-week tallying is not permitted.</p>
+  </div>
+
+  <div class="callout-card">
+    <div class="callout-title">🏋️ Heavy Lifting Rule</div>
+    <p>If both people work together on a 3pt task, <strong>both log 3pts independently</strong>. Shared effort is not penalized.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Rules of Engagement</div>
+    <ul class="rules-list">
+      <li><strong>Same-day logging only</strong> — log at time of completion. No retroactive entries from "last Tuesday."</li>
+      <li><strong>No self-awarding bonus points</strong> — points are fixed per category. You cannot upgrade a 1pt task to 3pt because you really didn't want to do it.</li>
+      <li><strong>Minimum effort standard</strong> — a chore only counts if completed. Loading the dishwasher and leaving it unstarted does not count as "did the dishes."</li>
+      <li><strong>Laundry chair rule</strong> — put-away only counts if laundry reaches drawers/closet, not the bedroom chair.</li>
+      <li><strong>School drop-off credit</strong> — only awarded if the child arrives on time with all required items. No partial credit.</li>
+      <li><strong>Week resets Monday midnight</strong> — no points carry over. Each week is a fresh start.</li>
+      <li><strong>No sabotage</strong> — deliberately making messes to score more cleanup points is grounds for immediate disqualification and a serious conversation.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dispute Resolution</div>
+    <ul class="rules-list">
+      <li><strong>The app is the ref</strong> — if it isn't logged, it didn't happen.</li>
+      <li><strong>Contest within 24 hours</strong> — disputes must be raised within 24 hours of the entry being logged.</li>
+      <li><strong>School drop-off disputes</strong> — if the child is late or missing items, the logging party forfeits those points. No exceptions.</li>
+      <li><strong>Ties = takeout</strong> — in the event of a tie, both parties win. Celebrated with takeout, split evenly.</li>
+    </ul>
+  </div>
+
+  <!-- Rendered dynamically by renderRules() using config names + stakes -->
+  <div class="card" id="agreement-card"></div>
+</div>
+
+<!-- ══════════ BACKUP ══════════ -->
+<div class="page" id="page-backup">
+  <div class="page-header"><h1>Backup</h1><p>Save your data</p></div>
+  <div class="card">
+    <div class="card-title">Download Backup</div>
+    <button onclick="window.location.href='/api/backup'" class="btn" style="width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--border);font-size:0.95rem;">💾 Download Backup</button>
+    <p style="color:var(--muted);font-size:0.74rem;text-align:center;margin-top:10px">Download a backup of all points and streaks before updating the app</p>
+  </div>
+</div>
+
+<!-- QUICK ADD MODAL -->
+<div id="qa-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:24px 20px 32px;width:100%;max-width:480px;">
+    <div style="text-align:center;margin-bottom:6px;font-size:1rem;font-weight:600" id="qa-title"></div>
+    <div style="text-align:center;color:var(--muted);font-size:0.78rem;margin-bottom:20px">Who did this? <span id="qa-pts" style="color:var(--gold)"></span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+      <button id="qa-p1" class="btn btn-p1" style="font-size:1.1rem;padding:14px;">Player 1</button>
+      <button id="qa-p2" class="btn btn-p2"   style="font-size:1.1rem;padding:14px;">Player 2</button>
+    </div>
+    <button onclick="closeQA()" style="width:100%;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;">Cancel</button>
+  </div>
+</div>
+
+<!-- WINNER SUMMARY MODAL -->
+<div id="winner-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.93);z-index:300;overflow-y:auto;padding:24px 20px 40px;">
+  <div style="max-width:480px;margin:0 auto;padding-top:16px;">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div id="winner-trophy" style="font-size:3.5rem;margin-bottom:10px;"></div>
+      <div id="winner-title" style="font-family:'Bebas Neue',sans-serif;font-size:2.6rem;letter-spacing:4px;line-height:1;"></div>
+      <div id="winner-subtitle" style="color:var(--muted);font-size:0.83rem;letter-spacing:1px;margin-top:8px;line-height:1.5;"></div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:14px;">
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;text-align:center;">
+        <div>
+          <div id="ws-name-p1" style="color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;">Player 1</div>
+          <div id="ws-score-p1" style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:var(--blue);line-height:1;"></div>
+          <div id="ws-tasks-p1" style="font-size:0.7rem;color:var(--muted);margin-top:2px;"></div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;color:var(--muted);letter-spacing:2px;">VS</div>
+        <div>
+          <div id="ws-name-p2" style="color:var(--pink);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;">Player 2</div>
+          <div id="ws-score-p2" style="font-family:'Bebas Neue',sans-serif;font-size:3.5rem;color:var(--pink);line-height:1;"></div>
+          <div id="ws-tasks-p2" style="font-size:0.7rem;color:var(--muted);margin-top:2px;"></div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px;">
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:0.85rem;letter-spacing:2px;color:var(--muted);margin-bottom:10px;">TOP CHORES THIS WEEK</div>
+      <div id="ws-top-chores"></div>
+    </div>
+    <button onclick="showConfirmReset()" style="width:100%;background:var(--gold);color:#000;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:2px;cursor:pointer;margin-bottom:10px;">End the Week →</button>
+    <button onclick="closeWinnerModal()" style="width:100%;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);padding:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;">Cancel</button>
+  </div>
+</div>
+
+<!-- CONFIRM RESET MODAL -->
+<div id="confirm-reset-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:400;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:28px 24px 40px;width:100%;max-width:480px;">
+    <div style="text-align:center;font-size:1.8rem;margin-bottom:10px;">⚠️</div>
+    <div style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:1.7rem;letter-spacing:3px;margin-bottom:8px;">Are You Sure?</div>
+    <div style="text-align:center;color:var(--muted);font-size:0.87rem;line-height:1.6;margin-bottom:26px;">This will end the week and archive all entries.<br>Scores will reset to zero.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <button onclick="cancelReset()" style="background:none;border:1px solid var(--border);border-radius:10px;color:var(--text);padding:14px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;">Cancel</button>
+      <button onclick="confirmReset()" style="background:var(--red);border:none;border-radius:10px;color:#fff;padding:14px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:1.5px;">End Week</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('score',this)"><span class="icon">🏆</span>Scoreboard</button>
+  <button class="nav-btn" onclick="showPage('history',this)"><span class="icon">📋</span>History</button>
+  <button class="nav-btn" onclick="showPage('schedule',this)"><span class="icon">📅</span>Schedule</button>
+  <button class="nav-btn" onclick="showPage('rules',this)"><span class="icon">📖</span>Rules</button>
+  <button class="nav-btn" onclick="showPage('backup',this)"><span class="icon">💾</span>Backup</button>
+</nav>
+
+<script>
+const QUICK = [
+  // 1pt tasks
+  {label:'🐱 Feed Cat',        pts:1},
+  {label:'🪣 Cat Litter',      pts:1},
+  {label:'🗑️ Trash',           pts:1},
+  {label:'🧽 Wipe Counters',   pts:1},
+  {label:'🫧 Wash Laundry',    pts:1},
+  {label:'🧹 Sweep',           pts:1},
+  {label:'📅 Make Appt',       pts:1},
+  {label:'🍱 Kids Lunch',      pts:1},
+  {label:'🚗 Activity Drop',   pts:1},
+  // 2pt tasks
+  {label:'🍳 Cook Meal',       pts:2},
+  {label:'🍽️ Dishes',          pts:2},
+  {label:'👕 Fold Laundry',    pts:2},
+  {label:'🗂️ Put Away Laundry',pts:2},
+  {label:'🧹 Sweep + Mop',     pts:2},
+  {label:'🧺 Vacuum',          pts:2},
+  {label:'🛌 Kids Bedtime',    pts:2},
+  {label:'🏥 Take to Appt',    pts:2},
+  {label:'🎯 Stay for Activity',pts:2},
+  {label:'🏠 Host Playdate',   pts:2},
+  {label:'🚨 Emergency Errand',pts:2},
+  {label:'🏫 School Drop-off', pts:2},
+  // 3pt tasks
+  {label:'🛁 Kids Bath',       pts:3},
+  {label:'🛒 Groceries',       pts:3},
+  {label:'🚿 Deep Clean Bathroom',pts:3},
+  {label:'🧼 Deep Clean',      pts:3},
+  {label:'🛋️ Move Furniture',  pts:3},
+  {label:'🔧 Build/Deconstruct',pts:3},
+  {label:'🏡 Full Room Rearrange',pts:3},
+  {label:'🎉 Kids Outing',     pts:3},
+  {label:'🏫 School Drop+Prep',pts:3},
+];
+
+const DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let p1Name = 'Player 1';
+let p2Name = 'Player 2';
+let p1Key  = 'player1';
+let p2Key  = 'player2';
+let configStakes = null;
+let entries    = [];
+let schedule   = null;
+let checks     = {};
+let streaks    = {};
+let histFilter = 'all';
+let openDays   = {};
+
+// Built after config loads so 'who' values use real player keys
+function makeDefaultSchedule() {
+  return {
+    Monday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Kids Bedtime',who:p1Key,pts:2},{chore:'Dishes',who:p2Key,pts:2}],
+    Tuesday:   [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cat Litter',who:p1Key,pts:1},{chore:'Laundry (wash)',who:p2Key,pts:2},{chore:'Cook Dinner',who:p1Key,pts:2}],
+    Wednesday: [{chore:'Feed Cat',who:'both',pts:1},{chore:'Vacuum',who:p1Key,pts:2},{chore:'Kids Bedtime',who:p2Key,pts:2},{chore:'Laundry (fold)',who:p2Key,pts:2}],
+    Thursday:  [{chore:'Feed Cat',who:'both',pts:1},{chore:'Dishes',who:p1Key,pts:2},{chore:'Cook Dinner',who:p2Key,pts:2}],
+    Friday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cat Litter',who:p2Key,pts:1},{chore:'Wipe Counters',who:'both',pts:1},{chore:'Kids Bath',who:p1Key,pts:3},{chore:'Trash Out',who:p2Key,pts:1}],
+    Saturday:  [{chore:'Feed Cat',who:'both',pts:1},{chore:'Groceries',who:'both',pts:3},{chore:'Deep Clean Bathroom',who:p2Key,pts:3},{chore:'Yard / Outdoor',who:p1Key,pts:3}],
+    Sunday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cook Family Meal',who:'both',pts:2},{chore:'Kids Bath',who:p2Key,pts:3},{chore:'Prep Week Lunches',who:p1Key,pts:2}],
+  };
+}
+
+// ── SYNC HELPERS ──────────────────────────────────────────────────────────
+function syncBadge(state) {
+  const b = document.getElementById('sync-badge');
+  b.className = 'sync-badge' + (state==='syncing' ? ' syncing' : state==='error' ? ' error' : '');
+  b.textContent = state==='syncing' ? '↑ syncing…' : state==='error' ? '✕ offline' : '✓ synced';
+}
+
+async function api(method, path, body) {
+  syncBadge('syncing');
+  try {
+    const res = await fetch(path, {
+      method,
+      headers: body ? {'Content-Type':'application/json'} : {},
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const data = await res.json();
+    syncBadge('ok');
+    return data;
+  } catch(e) {
+    syncBadge('error');
+    throw e;
+  }
+}
+
+async function loadAll() {
+  const [cfg, d] = await Promise.all([
+    api('GET', '/api/config'),
+    api('GET', '/api/data')
+  ]);
+  p1Name       = cfg.player1;
+  p2Name       = cfg.player2;
+  p1Key        = cfg.player1.toLowerCase();
+  p2Key        = cfg.player2.toLowerCase();
+  configStakes = cfg.stakes;
+  entries  = d.entries  || [];
+  schedule = d.schedule || makeDefaultSchedule();
+  checks   = d.checks   || {};
+  streaks  = d.streaks  || {};
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function todayName() {
+  return ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][new Date().getDay()];
+}
+function weekStart(d) {
+  const dt = new Date(d), day = dt.getDay();
+  const diff = dt.getDate() - day + (day===0?-6:1);
+  return new Date(dt.setDate(diff)).toDateString();
+}
+function curWeek() { return weekStart(Date.now()); }
+function fmtTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})
+    +' · '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+function weekLabel(ws) {
+  const m = new Date(ws), s = new Date(m); s.setDate(m.getDate()+6);
+  const f = d => d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  return f(m)+' – '+f(s);
+}
+function daysUntilMonday() {
+  const day = new Date().getDay();
+  return day === 0 ? 1 : 8 - day;
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if (id==='history')  renderHistory();
+  if (id==='schedule') renderSchedule();
+  if (id==='rules')    renderRules();
+}
+
+// ── LOG CHORE ─────────────────────────────────────────────────────────────
+async function logChore(who) {
+  const chore = document.getElementById('chore-input').value.trim();
+  const pts   = parseInt(document.getElementById('points-select').value);
+  if (!chore) { document.getElementById('chore-input').focus(); return; }
+  await addEntry(who, chore, pts);
+  document.getElementById('chore-input').value = '';
+}
+
+function quickAdd(label, pts) {
+  document.getElementById('qa-title').textContent = label;
+  document.getElementById('qa-pts').textContent   = pts+'pt'+(pts!==1?'s':'');
+  const p1Btn = document.getElementById('qa-p1');
+  const p2Btn = document.getElementById('qa-p2');
+  p1Btn.textContent = p1Name;
+  p1Btn.onclick = () => { closeQA(); addEntry(p1Key, label, pts); };
+  p2Btn.textContent = p2Name;
+  p2Btn.onclick = () => { closeQA(); addEntry(p2Key, label, pts); };
+  document.getElementById('qa-modal').style.display = 'flex';
+}
+function closeQA() { document.getElementById('qa-modal').style.display = 'none'; }
+
+async function addEntry(who, chore, pts, time, schedDay) {
+  const entry = { who, chore, pts, week: curWeek() };
+  if (time)     entry.time     = time;
+  if (schedDay) entry.schedDay = schedDay;
+  await api('POST', '/api/entries', entry);
+  await loadAll();
+  renderScore();
+  const el = document.getElementById('score-' + (who===p1Key ? 'p1' : 'p2'));
+  if (el) { el.classList.add('bump'); setTimeout(()=>el.classList.remove('bump'),260); }
+}
+
+async function deleteEntry(idx) {
+  await api('DELETE', '/api/entries/'+idx);
+  await loadAll();
+  renderScore();
+  renderHistory();
+}
+
+async function resetWeek() { showWinnerSummary(); }
+
+function showWinnerSummary() {
+  const ws   = curWeek();
+  const wEnt = entries.filter(e => e.week === ws && !e.archived);
+  let c=0, w=0, ct=0, wt=0;
+  for (const e of wEnt) {
+    if (e.who===p1Key){c+=e.pts;ct++;}else{w+=e.pts;wt++;}
+  }
+
+  let trophy, title, subtitle, titleColor;
+  if (c > w) {
+    trophy = '🏆'; title = p1Name+' Wins!'; titleColor = 'var(--blue)';
+    subtitle = p1Name+' finished with '+c+' pts vs '+p2Name+"'s "+w+' pts';
+  } else if (w > c) {
+    trophy = '🏆'; title = p2Name+' Wins!'; titleColor = 'var(--pink)';
+    subtitle = p2Name+' finished with '+w+' pts vs '+p1Name+"'s "+c+' pts';
+  } else {
+    trophy = '🤝'; title = "It's a Tie!"; titleColor = 'var(--gold)';
+    subtitle = 'Both finished with '+c+' pts this week';
+  }
+
+  document.getElementById('winner-trophy').textContent = trophy;
+  const titleEl = document.getElementById('winner-title');
+  titleEl.textContent = title; titleEl.style.color = titleColor;
+  document.getElementById('winner-subtitle').textContent = subtitle;
+  document.getElementById('ws-name-p1').textContent    = p1Name;
+  document.getElementById('ws-score-p1').textContent = c;
+  document.getElementById('ws-tasks-p1').textContent = ct+' chore'+(ct!==1?'s':'');
+  document.getElementById('ws-name-p2').textContent   = p2Name;
+  document.getElementById('ws-score-p2').textContent  = w;
+  document.getElementById('ws-tasks-p2').textContent  = wt+' chore'+(wt!==1?'s':'');
+
+  const top = [...wEnt].sort((a,b)=>b.pts-a.pts).slice(0,5);
+  document.getElementById('ws-top-chores').innerHTML = top.length
+    ? top.map((e,i) => {
+        const isP1  = e.who===p1Key;
+        const cls   = isP1?'blue':'pink';
+        const name  = isP1?p1Name:p2Name;
+        const border = i<top.length-1?'border-bottom:1px solid var(--border);':'';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;${border}">
+          <div style="display:flex;align-items:center;gap:9px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--${cls});flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:0.84rem;">${e.chore}</div>
+              <div style="font-size:0.7rem;color:var(--muted);">${name}</div>
+            </div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:0.9rem;color:var(--${cls});">+${e.pts}pt${e.pts!==1?'s':''}</div>
+        </div>`;
+      }).join('')
+    : '<div style="color:var(--muted);font-size:0.83rem;text-align:center;padding:12px 0;">No chores logged this week</div>';
+
+  document.getElementById('winner-modal').style.display = 'block';
+}
+
+function closeWinnerModal()  { document.getElementById('winner-modal').style.display = 'none'; }
+function showConfirmReset()  { document.getElementById('winner-modal').style.display = 'none'; document.getElementById('confirm-reset-modal').style.display = 'flex'; }
+function cancelReset()       { document.getElementById('confirm-reset-modal').style.display = 'none'; }
+
+async function confirmReset() {
+  document.getElementById('confirm-reset-modal').style.display = 'none';
+  await api('PATCH', '/api/entries/archive/'+encodeURIComponent(curWeek()));
+  await loadAll();
+  renderScore();
+}
+
+// ── SCORES ────────────────────────────────────────────────────────────────
+function weekScores() {
+  const ws = curWeek(); let c=0,w=0,ct=0,wt=0;
+  for (const e of entries.filter(x=>x.week===ws && !x.archived)) {
+    if (e.who===p1Key){c+=e.pts;ct++;}else{w+=e.pts;wt++;}
+  }
+  return {c,w,ct,wt};
+}
+
+function logItemHTML(e, realIdx) {
+  const isP1 = e.who===p1Key;
+  const who  = isP1 ? p1Name : p2Name;
+  const cls  = isP1 ? 'p1' : 'p2';
+  const dayBadge = e.schedDay
+    ? `<span style="display:inline-block;font-size:0.62rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-left:5px;color:var(--muted);vertical-align:middle;">${e.schedDay}</span>`
+    : '';
+  return `<div class="log-item">
+    <div class="log-left">
+      <div class="dot dot-${cls}"></div>
+      <div>
+        <div class="log-chore">${e.chore}${dayBadge}</div>
+        <div class="log-meta">${who} · ${fmtTime(e.time)}</div>
+      </div>
+    </div>
+    <div class="log-right">
+      <div class="log-pts pts-${cls}">+${e.pts}pt${e.pts!==1?'s':''}</div>
+      <button class="del-btn" onclick="deleteEntry(${realIdx})">✕</button>
+    </div>
+  </div>`;
+}
+
+function renderScore() {
+  const {c,w,ct,wt} = weekScores();
+
+  // Names
+  document.getElementById('p1-name-score').textContent  = p1Name;
+  document.getElementById('p2-name-score').textContent = p2Name;
+  document.getElementById('p1-bar-lbl').textContent      = p1Name;
+  document.getElementById('p2-bar-lbl').textContent    = p2Name;
+  document.getElementById('log-btn-p1').textContent      = p1Name;
+  document.getElementById('log-btn-p2').textContent      = p2Name;
+  document.getElementById('week-label-top').textContent  = weekLabel(curWeek());
+  document.getElementById('score-p1').textContent    = c;
+  document.getElementById('score-p2').textContent      = w;
+  document.getElementById('tasks-p1').textContent    = ct+' chore'+(ct!==1?'s':'');
+  document.getElementById('tasks-p2').textContent      = wt+' chore'+(wt!==1?'s':'');
+
+  // Streaks
+  const sc = streaks[p1Key] || 0, sw = streaks[p2Key] || 0;
+  document.getElementById('streak-p1').textContent = sc >= 2 ? '🔥 '+sc+' week streak' : sc===1 ? '1 week streak' : '';
+  document.getElementById('streak-p2').textContent   = sw >= 2 ? '🔥 '+sw+' week streak' : sw===1 ? '1 week streak' : '';
+
+  // Leader banner
+  const banner = document.getElementById('leader-banner');
+  document.getElementById('crown-p1').textContent = '';
+  document.getElementById('crown-p2').textContent   = '';
+  banner.className = 'leader-banner';
+  if (c>w) {
+    document.getElementById('crown-p1').textContent = '👑';
+    banner.classList.add('p1-leads');
+    banner.textContent = '🔵 '+p1Name+' leads by '+(c-w)+' pt'+(c-w!==1?'s':'');
+  } else if (w>c) {
+    document.getElementById('crown-p2').textContent = '👑';
+    banner.classList.add('p2-leads');
+    banner.textContent = '💗 '+p2Name+' leads by '+(w-c)+' pt'+(w-c!==1?'s':'');
+  } else {
+    banner.classList.add('tied');
+    banner.textContent = '⚖️ Tied — may the best person win';
+  }
+
+  // Week at a glance
+  const total    = ct+wt;
+  const gap      = Math.abs(c-w);
+  const leader   = c>w ? p1Name : w>c ? p2Name : null;
+  const daysLeft = daysUntilMonday();
+  const motiv    = gap===0 ? "Anyone's game 👀" : gap<=3 ? "It's close — keep going!" : gap<=7 ? "Time to catch up! 💪" : "Big deficit — hustle! 🚨";
+  const aheadColor = leader===p1Name ? 'var(--blue)' : leader ? 'var(--pink)' : 'var(--gold)';
+  const aheadText  = leader ? leader+' +'+gap+'pt'+(gap!==1?'s':'') : 'Tied ⚖️';
+  document.getElementById('week-summary').innerHTML = `
+    <div class="card-title">Week at a Glance</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+      <div style="text-align:center;background:var(--bg);border-radius:8px;padding:10px 6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1">${total}</div>
+        <div style="font-size:0.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">Chores</div>
+      </div>
+      <div style="text-align:center;background:var(--bg);border-radius:8px;padding:10px 6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:${leader?'1rem':'1.8rem'};line-height:1;color:${aheadColor}">${aheadText}</div>
+        <div style="font-size:0.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">Ahead</div>
+      </div>
+      <div style="text-align:center;background:var(--bg);border-radius:8px;padding:10px 6px">
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:1.8rem;line-height:1">${daysLeft}</div>
+        <div style="font-size:0.63rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:3px">Days Left</div>
+      </div>
+    </div>
+    <div style="text-align:center;font-size:0.8rem;color:var(--muted2);font-style:italic">${motiv}</div>
+  `;
+
+  // Effort bars
+  const total2=c+w, cp=total2?Math.round(c/total2*100):0, wp=total2?100-cp:0;
+  document.getElementById('bar-p1').style.width = cp+'%';
+  document.getElementById('bar-p2').style.width   = wp+'%';
+  document.getElementById('pct-p1').textContent = cp+'%';
+  document.getElementById('pct-p2').textContent   = wp+'%';
+
+  // Week log
+  const ws2=curWeek(), wEnt=entries.filter(e=>e.week===ws2 && !e.archived);
+  const list = document.getElementById('week-log');
+  list.innerHTML = wEnt.length
+    ? wEnt.map(e=>logItemHTML(e,entries.indexOf(e))).join('')
+    : '<div class="log-empty">Nothing logged yet this week 🧹</div>';
+
+  // Quick chips
+  document.getElementById('quick-chips').innerHTML = QUICK.map(q=>
+    `<div class="chip" onclick="quickAdd('${q.label.replace(/'/g,"\\'")}',${q.pts})">${q.label} <span style="color:var(--muted)">${q.pts}pt</span></div>`
+  ).join('');
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────────────
+function setFilter(f, el) {
+  histFilter = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory() {
+  document.querySelectorAll('.p1-filter-chip').forEach(el=>el.textContent=p1Name);
+  document.querySelectorAll('.p2-filter-chip').forEach(el=>el.textContent=p2Name);
+  const allC = entries.filter(e=>e.who===p1Key).reduce((a,e)=>a+e.pts,0);
+  const allW = entries.filter(e=>e.who===p2Key).reduce((a,e)=>a+e.pts,0);
+  document.getElementById('stat-total').textContent    = entries.length;
+  document.getElementById('stat-p1').textContent   = allC;
+  document.getElementById('stat-p2').textContent     = allW;
+  document.getElementById('stat-p1-lbl').textContent   = p1Name+' Pts';
+  document.getElementById('stat-p2-lbl').textContent = p2Name+' Pts';
+
+  const ws = curWeek();
+  let filtered = [...entries];
+  if (histFilter===p1Key)  filtered = filtered.filter(e=>e.who===p1Key);
+  if (histFilter===p2Key)  filtered = filtered.filter(e=>e.who===p2Key);
+  if (histFilter==='week') filtered = filtered.filter(e=>e.week===ws);
+
+  const weeks = {};
+  for (const e of filtered) { const k=e.week||ws; if(!weeks[k]) weeks[k]=[]; weeks[k].push(e); }
+
+  const content = document.getElementById('history-content');
+  if (!filtered.length) { content.innerHTML='<div class="log-empty" style="padding:30px 0">No entries found</div>'; return; }
+
+  content.innerHTML = Object.keys(weeks).sort((a,b)=>new Date(b)-new Date(a)).map(wk=>{
+    const we = weeks[wk];
+    const wC = we.filter(e=>e.who===p1Key).reduce((a,e)=>a+e.pts,0);
+    const wW = we.filter(e=>e.who===p2Key).reduce((a,e)=>a+e.pts,0);
+    return `<div class="week-block">
+      <div class="week-block-header">
+        <div class="week-label-txt">${wk===ws?'THIS WEEK · ':''}${weekLabel(wk)}</div>
+        <div class="week-tally"><span class="tally-c">${p1Name[0]}: ${wC}pts</span><span class="tally-w">${p2Name[0]}: ${wW}pts</span></div>
+      </div>
+      <div class="log-list">${we.map(e=>logItemHTML(e,entries.indexOf(e))).join('')}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── SCHEDULE ──────────────────────────────────────────────────────────────
+function schedOptGroups() {
+  return [1,2,3].map(p => {
+    const label = p===1 ? '1 Point' : p===2 ? '2 Points' : '3 Points';
+    const opts  = QUICK
+      .map((q,idx) => ({q,idx}))
+      .filter(({q}) => q.pts===p)
+      .map(({q,idx}) => `<option value="${idx}">${q.label}</option>`)
+      .join('');
+    return `<optgroup label="${label}">${opts}</optgroup>`;
+  }).join('') + `<option value="custom">Custom…</option>`;
+}
+
+function renderSchedule() {
+  const today = todayName();
+  const ts    = schedule[today]||[];
+  const done  = ts.filter((_,i)=>checks[today+'-'+i]).length;
+  const pct   = ts.length ? Math.round(done/ts.length*100) : 0;
+  document.getElementById('today-progress').innerHTML = `
+    <div class="prog-row">
+      <div class="prog-label">${today}</div>
+      <div class="prog-track"><div class="prog-fill" style="width:${pct}%"></div></div>
+      <div style="font-size:0.75rem;color:var(--muted);min-width:44px;text-align:right">${done}/${ts.length}</div>
+    </div>
+    ${pct===100&&ts.length?'<div style="color:var(--green);font-size:0.8rem;margin-top:6px;text-align:center">✅ All done for today!</div>':''}
+  `;
+
+  document.getElementById('schedule-days').innerHTML = DAYS.map(day => {
+    const chores = schedule[day]||[];
+    const dc     = chores.filter((_,i)=>checks[day+'-'+i]).length;
+    const isToday = day===today;
+    const isOpen  = openDays[day]!==undefined ? openDays[day] : isToday;
+    return `<div class="day-card">
+      <div class="day-header" onclick="toggleDay('${day}')">
+        <div class="day-name ${isToday?'today-day':''}">${day}${isToday?' ← Today':''}</div>
+        <div class="day-meta-r"><span>${dc}/${chores.length} done</span><span class="day-toggle ${isOpen?'open':''}" id="tog-${day}">▼</span></div>
+      </div>
+      <div class="day-body ${isOpen?'open':''}" id="body-${day}">
+        ${chores.length?chores.map((c,i)=>choreLineHTML(day,c,i)).join(''):'<div class="log-empty">No chores scheduled</div>'}
+        <div class="add-sched-row">
+          <select id="nq-${day}" onchange="schedQuickSelect('${day}')" style="width:100%">
+            <option value="">— Pick a chore —</option>
+            ${schedOptGroups()}
+          </select>
+          <input type="text" id="nc-${day}" placeholder="Custom chore name…" style="display:none;width:100%" />
+          <select id="nw-${day}">
+            <option value="${p1Key}">${p1Name}</option>
+            <option value="${p2Key}">${p2Name}</option>
+            <option value="both">Both</option>
+          </select>
+          <select id="np-${day}"><option value="1">1pt</option><option value="2" selected>2pt</option><option value="3">3pt</option></select>
+          <button class="btn-sm ok" onclick="addSchedChore('${day}')">+ Add</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function choreLineHTML(day, c, i) {
+  const done     = !!checks[day+'-'+i];
+  const isP1     = c.who===p1Key;
+  const whoColor = isP1 ? 'var(--blue)' : c.who===p2Key ? 'var(--pink)' : 'var(--gold)';
+  const whoLabel = isP1 ? p1Name : c.who===p2Key ? p2Name : 'Both';
+  return `<div class="chore-line">
+    <div class="chore-ll">
+      <div class="chore-check ${done?'done':''}" onclick="toggleCheck('${day}',${i})">${done?'✓':''}</div>
+      <div><div class="chore-name-s ${done?'crossed':''}">${c.chore}</div><div style="color:${whoColor};font-size:0.7rem">${whoLabel}</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="chore-pts-s">${c.pts}pt</div>
+      <button class="del-btn" onclick="removeSchedChore('${day}',${i})">✕</button>
+    </div>
+  </div>`;
+}
+
+function dateForDay(dayName) {
+  const idx    = DAYS.indexOf(dayName);
+  const monday = new Date(curWeek());
+  const d      = new Date(monday);
+  d.setDate(monday.getDate() + idx);
+  d.setHours(12, 0, 0, 0);
+  return d.getTime();
+}
+
+function toggleDay(day) { openDays[day] = !openDays[day]; renderSchedule(); }
+
+async function toggleCheck(day, i) {
+  const key        = day+'-'+i;
+  const wasChecked = !!checks[key];
+  if (wasChecked) { delete checks[key]; } else { checks[key] = true; }
+  renderSchedule();
+  await api('PATCH', '/api/checks', {checks});
+  if (!wasChecked) {
+    const c = schedule[day][i];
+    if (c && c.who !== 'both') {
+      await addEntry(c.who, c.chore, c.pts, dateForDay(day), day);
+    }
+  }
+}
+
+function schedQuickSelect(day) {
+  const sel  = document.getElementById('nq-'+day);
+  const inp  = document.getElementById('nc-'+day);
+  const psel = document.getElementById('np-'+day);
+  if (sel.value === 'custom') {
+    inp.style.display = ''; inp.focus();
+  } else {
+    inp.style.display = 'none';
+    if (sel.value !== '') psel.value = QUICK[parseInt(sel.value)].pts;
+  }
+}
+
+async function addSchedChore(day) {
+  const sel = document.getElementById('nq-'+day);
+  const inp = document.getElementById('nc-'+day);
+  const who = document.getElementById('nw-'+day).value;
+  const pts = parseInt(document.getElementById('np-'+day).value);
+  let chore;
+  if (sel.value==='custom')   { chore = inp.value.trim(); }
+  else if (sel.value !== '')  { chore = QUICK[parseInt(sel.value)].label; }
+  if (!chore) return;
+  if (!schedule[day]) schedule[day] = [];
+  schedule[day].push({chore,who,pts});
+  await api('PATCH','/api/schedule',{schedule});
+  renderSchedule();
+}
+
+async function removeSchedChore(day, i) {
+  schedule[day].splice(i,1);
+  const nc = {};
+  for (const k in checks) {
+    if (!k.startsWith(day+'-')){nc[k]=checks[k];continue;}
+    const idx = parseInt(k.split('-')[1]);
+    if (idx<i) nc[k]=checks[k];
+    else if (idx>i) nc[day+'-'+(idx-1)]=checks[k];
+  }
+  checks = nc;
+  await api('PATCH','/api/schedule',{schedule});
+  await api('PATCH','/api/checks',{checks});
+  renderSchedule();
+}
+
+// ── RULES ─────────────────────────────────────────────────────────────────
+function toggleArticle(header) {
+  const body   = header.nextElementSibling;
+  const toggle = header.querySelector('.article-toggle');
+  const open   = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+function renderRules() {
+  // Tiers
+  const byPt    = pt => QUICK.filter(q=>q.pts===pt);
+  const tierCol = (pt, color, label) => `
+    <div class="tier-col">
+      <div class="tier-header" style="color:${color}">${label}</div>
+      ${byPt(pt).map(q=>`<div class="tier-item">${q.label}</div>`).join('')}
+    </div>`;
+  document.getElementById('rules-tiers').innerHTML =
+    tierCol(1,'var(--green)','1 PT') +
+    tierCol(2,'var(--gold)', '2 PT') +
+    tierCol(3,'var(--red)',  '3 PT');
+
+  // Stakes table
+  if (configStakes) {
+    const s = configStakes;
+    document.getElementById('stakes-tbody').innerHTML = `
+      <tr><td>1–3 pts</td><td>${s.low.winnerGets}</td><td>${s.low.loserOwes}</td></tr>
+      <tr><td>4–7 pts</td><td>${s.mid.winnerGets}</td><td>${s.mid.loserOwes}</td></tr>
+      <tr><td>8+ pts</td><td>${s.high.winnerGets}</td><td>${s.high.loserOwes}</td></tr>
+    `;
+  }
+
+  // Generic household agreement
+  const s = configStakes || {
+    low:  {winnerGets:'Pick the show',    loserOwes:'Buys a coffee'},
+    mid:  {winnerGets:'Chore-free morning',loserOwes:'Solo bedtime'},
+    high: {winnerGets:'Full lazy day',    loserOwes:'Handles all chores'}
+  };
+  const articles = [
+    { title: 'Article I — The Official Point System', body: `
+      <table class="rules-table">
+        <thead><tr><th>Pts</th><th>Tier</th><th>Example Chores</th></tr></thead>
+        <tbody>
+          <tr><td class="pts-cell">1pt</td><td>Quick (under 5 min)</td><td class="notes-cell">Feed cat, wipe counters, take out trash, switch laundry</td></tr>
+          <tr><td class="pts-cell">2pts</td><td>Medium (10–20 min)</td><td class="notes-cell">Cook a meal, do dishes, fold laundry, vacuum</td></tr>
+          <tr><td class="pts-cell">3pts</td><td>Big Job (30+ min)</td><td class="notes-cell">Kids bath + bedtime, deep clean, grocery run</td></tr>
+        </tbody>
+      </table>`
+    },
+    { title: 'Article II — Weekly Stakes', body: `
+      <table class="rules-table">
+        <thead><tr><th>Gap</th><th>Winner Gets</th><th>Loser Owes</th></tr></thead>
+        <tbody>
+          <tr><td>1–3 pts</td><td>${s.low.winnerGets}</td><td>${s.low.loserOwes}</td></tr>
+          <tr><td>4–7 pts</td><td>${s.mid.winnerGets}</td><td>${s.mid.loserOwes}</td></tr>
+          <tr><td>8+ pts</td><td>${s.high.winnerGets}</td><td>${s.high.loserOwes}</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.76rem;color:var(--muted);margin-top:8px;font-style:italic">Stakes may be renegotiated before the week begins only.</p>`
+    },
+    { title: 'Article III — Rules of Engagement', body: `
+      <ul class="rules-list">
+        <li><strong>Same-day logging only</strong> — no retroactive entries.</li>
+        <li><strong>No self-awarding bonus points</strong> — points are fixed per category.</li>
+        <li><strong>Minimum effort standard</strong> — a chore only counts if actually completed.</li>
+        <li><strong>Week resets every Monday</strong> — no points carry over.</li>
+        <li><strong>No sabotage</strong> — making messes to score cleanup points is grounds for disqualification.</li>
+      </ul>`
+    },
+    { title: 'Article IV — Dispute Resolution', body: `
+      <ul class="rules-list">
+        <li><strong>The app is the ref</strong> — if it isn't logged, it didn't happen.</li>
+        <li><strong>Contest within 24 hours</strong> of the entry being logged.</li>
+        <li><strong>Ties</strong> — both parties win. Celebrated with takeout, split evenly.</li>
+      </ul>`
+    },
+    { title: 'Article V — Amendments', body: `
+      <p style="font-size:0.82rem;color:var(--muted);line-height:1.6">This Agreement may be amended at any time by mutual consent. Delete config.json and run <code style="background:var(--bg);padding:2px 5px;border-radius:4px;">npm start</code> to reconfigure from scratch.</p>`
+    }
+  ].map(({title,body}) => `
+    <div class="agreement-article">
+      <div class="article-header" onclick="toggleArticle(this)"><span>${title}</span><span class="article-toggle">▼</span></div>
+      <div class="article-body">${body}</div>
+    </div>`).join('');
+
+  document.getElementById('agreement-card').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+      <div style="font-size:0.72rem;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">📄 Your Household Agreement</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:1.3rem;letter-spacing:2px;color:var(--text)">HousePoints Agreement</div>
+      <div style="font-size:0.72rem;color:var(--muted);margin-top:4px;font-style:italic">Legally non-binding but morally iron-clad</div>
+    </div>
+    <div style="font-size:0.82rem;color:var(--muted2);line-height:1.6;margin-bottom:4px">
+      This Agreement is entered into voluntarily by <strong style="color:var(--blue)">${p1Name}</strong> and
+      <strong style="color:var(--pink)">${p2Name}</strong> for the purpose of maintaining a fair, gamified system of household contribution tracking. Both parties agree that some friendly competition never hurt anybody.
+    </div>
+    ${articles}
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center">
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--blue);margin-bottom:20px">${p1Name}</div>
+          <div style="border-bottom:1px solid var(--muted);margin-bottom:6px;height:24px"></div>
+          <div style="font-size:0.72rem;color:var(--muted)">Signature</div>
+        </div>
+        <div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:2px;color:var(--pink);margin-bottom:20px">${p2Name}</div>
+          <div style="border-bottom:1px solid var(--muted);margin-bottom:6px;height:24px"></div>
+          <div style="font-size:0.72rem;color:var(--muted)">Signature</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────
+openDays[todayName()] = true;
+(async () => {
+  try {
+    await loadAll();
+  } catch(e) {
+    document.getElementById('sync-badge').className = 'sync-badge error';
+    document.getElementById('sync-badge').textContent = '✕ offline';
+  }
+  renderScore();
+  document.getElementById('loading-screen').style.display = 'none';
+})();
+
+setInterval(async () => {
+  try { await loadAll(); renderScore(); } catch(e) {}
+}, 30000);
+</script>
+</body>
+</html>

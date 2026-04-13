@@ -1,0 +1,11 @@
+{
+  "entries": [],
+  "schedule": null,
+  "checks": {},
+  "player1Name": "Player 1",
+  "player2Name": "Player 2",
+  "streaks": {
+    "player1": 0,
+    "player2": 0
+  }
+}
