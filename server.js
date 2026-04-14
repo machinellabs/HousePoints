@@ -4,36 +4,47 @@ const path    = require('path');
 const os      = require('os');
 
 const app      = express();
-const PORT     = 3000;
+const PORT     = process.env.PORT || 3000;
 const DATA     = path.join(__dirname, 'data.json');
 const CONFIG   = path.join(__dirname, 'config.json');
 
-// ── Load config (written by setup.js) ────────────────────────────────────
-if (!fs.existsSync(CONFIG)) {
-  console.error('❌  config.json not found. Run: npm run setup');
-  process.exit(1);
-}
-const config = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
-const p1Key  = config.player1.toLowerCase();
-const p2Key  = config.player2.toLowerCase();
+// ── Load config ───────────────────────────────────────────────────────────
+let config       = null;
+let p1Key        = null;
+let p2Key        = null;
+let isConfigured = false;
 
-// ── Init data file if missing ─────────────────────────────────────────────
-if (!fs.existsSync(DATA)) {
-  fs.writeFileSync(DATA, JSON.stringify({
-    entries:     [],
-    schedule:    null,
-    checks:      {},
-    player1Name: config.player1,
-    player2Name: config.player2,
-    streaks:     { [p1Key]: 0, [p2Key]: 0 }
-  }, null, 2));
+function loadConfig() {
+  if (!fs.existsSync(CONFIG)) return;
+  config       = JSON.parse(fs.readFileSync(CONFIG, 'utf8'));
+  p1Key        = config.player1.toLowerCase();
+  p2Key        = config.player2.toLowerCase();
+  isConfigured = true;
 }
+loadConfig();
+
+// ── Init data file if missing (only when configured) ─────────────────────
+function maybeInitData() {
+  if (!isConfigured) return;
+  if (!fs.existsSync(DATA)) {
+    fs.writeFileSync(DATA, JSON.stringify({
+      entries:     [],
+      schedule:    null,
+      checks:      {},
+      player1Name: config.player1,
+      player2Name: config.player2,
+      streaks:     { [p1Key]: 0, [p2Key]: 0 }
+    }, null, 2));
+  }
+}
+maybeInitData();
 
 function readData()   { return JSON.parse(fs.readFileSync(DATA, 'utf8')); }
 function writeData(d) { fs.writeFileSync(DATA, JSON.stringify(d, null, 2)); }
 
 // ── Migrate: ensure streaks field exists ─────────────────────────────────
 (function() {
+  if (!isConfigured) return;
   const d = readData();
   if (!d.streaks) { d.streaks = { [p1Key]: 0, [p2Key]: 0 }; writeData(d); }
 })();
@@ -56,9 +67,47 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── POST setup (first-run wizard) ────────────────────────────────────────
+app.post('/api/setup', (req, res) => {
+  const { player1, player2, resetDay, stakes } = req.body;
+  if (!player1 || !player2) return res.status(400).json({ error: 'player names required' });
+
+  const cfg = {
+    player1,
+    player2,
+    resetDay: Math.min(7, Math.max(1, parseInt(resetDay) || 1)),
+    stakes: stakes || {
+      low:  { winnerGets: 'Pick the show',         loserOwes: 'Buys a coffee' },
+      mid:  { winnerGets: 'Chore-free morning',     loserOwes: 'Solo bedtime routine' },
+      high: { winnerGets: 'Full lazy day',          loserOwes: 'Handles all chores for a day' }
+    }
+  };
+
+  fs.writeFileSync(CONFIG, JSON.stringify(cfg, null, 2));
+
+  const k1 = player1.toLowerCase();
+  const k2 = player2.toLowerCase();
+  fs.writeFileSync(DATA, JSON.stringify({
+    entries:     [],
+    schedule:    null,
+    checks:      {},
+    player1Name: player1,
+    player2Name: player2,
+    streaks:     { [k1]: 0, [k2]: 0 }
+  }, null, 2));
+
+  // Hot-reload config so server works immediately without restart
+  loadConfig();
+  maybeInitData();
+
+  console.log(`✅  Setup complete — ${player1} vs ${player2}`);
+  res.json({ ok: true });
+});
+
 // ── GET config ────────────────────────────────────────────────────────────
 app.get('/api/config', (req, res) => {
-  res.json(config);
+  if (!isConfigured) return res.json({ configured: false });
+  res.json({ configured: true, ...config });
 });
 
 // ── GET all data ──────────────────────────────────────────────────────────
@@ -137,7 +186,8 @@ app.get('/api/backup', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   const nets = os.networkInterfaces();
   console.log('');
-  console.log(`🏠 HousePoints running — ${config.player1} vs ${config.player2}`);
+  const label = isConfigured ? `${config.player1} vs ${config.player2}` : 'setup required';
+  console.log(`🏠 HousePoints running — ${label}`);
   console.log('');
   console.log('Network interfaces:');
   let shareIP = null;
@@ -150,9 +200,9 @@ app.listen(PORT, '0.0.0.0', () => {
     }
   }
   console.log('');
-  if (shareIP) {
+  if (shareIP && isConfigured) {
     console.log(`  Share with ${config.player2} → http://${shareIP}:${PORT}`);
-  } else {
+  } else if (!shareIP) {
     console.log('  ⚠️  No external network interface found — is WiFi on?');
   }
   console.log('');

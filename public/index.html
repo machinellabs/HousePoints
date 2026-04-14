@@ -526,13 +526,13 @@ let openDays   = {};
 // Built after config loads so 'who' values use real player keys
 function makeDefaultSchedule() {
   return {
-    Monday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Kids Bedtime',who:p1Key,pts:2},{chore:'Dishes',who:p2Key,pts:2}],
-    Tuesday:   [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cat Litter',who:p1Key,pts:1},{chore:'Laundry (wash)',who:p2Key,pts:2},{chore:'Cook Dinner',who:p1Key,pts:2}],
-    Wednesday: [{chore:'Feed Cat',who:'both',pts:1},{chore:'Vacuum',who:p1Key,pts:2},{chore:'Kids Bedtime',who:p2Key,pts:2},{chore:'Laundry (fold)',who:p2Key,pts:2}],
-    Thursday:  [{chore:'Feed Cat',who:'both',pts:1},{chore:'Dishes',who:p1Key,pts:2},{chore:'Cook Dinner',who:p2Key,pts:2}],
-    Friday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cat Litter',who:p2Key,pts:1},{chore:'Wipe Counters',who:'both',pts:1},{chore:'Kids Bath',who:p1Key,pts:3},{chore:'Trash Out',who:p2Key,pts:1}],
-    Saturday:  [{chore:'Feed Cat',who:'both',pts:1},{chore:'Groceries',who:'both',pts:3},{chore:'Deep Clean Bathroom',who:p2Key,pts:3},{chore:'Yard / Outdoor',who:p1Key,pts:3}],
-    Sunday:    [{chore:'Feed Cat',who:'both',pts:1},{chore:'Cook Family Meal',who:'both',pts:2},{chore:'Kids Bath',who:p2Key,pts:3},{chore:'Prep Week Lunches',who:p1Key,pts:2}],
+    Monday:    [{chore:'Take Out Trash',who:p1Key,pts:1},{chore:'Cook Dinner',who:p2Key,pts:2},{chore:'Dishes',who:p1Key,pts:2}],
+    Tuesday:   [{chore:'Laundry (wash)',who:p2Key,pts:2},{chore:'Cook Dinner',who:p1Key,pts:2},{chore:'Wipe Counters',who:'both',pts:1}],
+    Wednesday: [{chore:'Vacuum',who:p1Key,pts:2},{chore:'Laundry (fold)',who:p2Key,pts:2},{chore:'Dishes',who:p2Key,pts:2}],
+    Thursday:  [{chore:'Cook Dinner',who:p2Key,pts:2},{chore:'Dishes',who:p1Key,pts:2},{chore:'Wipe Counters',who:'both',pts:1}],
+    Friday:    [{chore:'Trash Out',who:p2Key,pts:1},{chore:'Wipe Counters',who:'both',pts:1},{chore:'Cook Dinner',who:p1Key,pts:2}],
+    Saturday:  [{chore:'Groceries',who:'both',pts:3},{chore:'Deep Clean Bathroom',who:p2Key,pts:3},{chore:'Vacuum',who:p1Key,pts:2}],
+    Sunday:    [{chore:'Meal Prep',who:'both',pts:2},{chore:'Mop Floors',who:p1Key,pts:2},{chore:'Clean Kitchen',who:p2Key,pts:3}],
   };
 }
 
@@ -565,6 +565,7 @@ async function loadAll() {
     api('GET', '/api/config'),
     api('GET', '/api/data')
   ]);
+  if (!cfg.configured) { window.location.href = '/setup.html'; return; }
   p1Name       = cfg.player1;
   p2Name       = cfg.player2;
   p1Key        = cfg.player1.toLowerCase();
@@ -1099,7 +1100,7 @@ function renderRules() {
       </ul>`
     },
     { title: 'Article V — Amendments', body: `
-      <p style="font-size:0.82rem;color:var(--muted);line-height:1.6">This Agreement may be amended at any time by mutual consent. Delete config.json and run <code style="background:var(--bg);padding:2px 5px;border-radius:4px;">npm start</code> to reconfigure from scratch.</p>`
+      <p style="font-size:0.82rem;color:var(--muted);line-height:1.6">This Agreement may be amended at any time by mutual consent. Visit <a href="/setup.html" style="color:var(--gold)">Setup</a> to reconfigure names and stakes from scratch.</p>`
     }
   ].map(({title,body}) => `
     <div class="agreement-article">

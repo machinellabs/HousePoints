@@ -4,8 +4,7 @@
   "description": "HousePoints — a two-player chore tracker with weekly stakes",
   "main": "server.js",
   "scripts": {
-    "start": "node setup.js && node server.js",
-    "setup": "node setup.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",

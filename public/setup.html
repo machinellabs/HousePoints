@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HousePoints — Setup</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d0d0f; --surface: #18181c; --surface2: #202026; --border: #2a2a30;
+  --gold: #f5c542; --blue: #4a9eff; --pink: #ff6eb4; --green: #3ddc84;
+  --red: #ff5555; --muted: #666; --muted2: #999; --text: #f0f0f0;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 40px 16px 60px;
+}
+
+.logo {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.8rem; letter-spacing: 6px; color: var(--gold);
+  margin-bottom: 4px;
+}
+.logo-sub {
+  font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 36px;
+}
+
+/* PROGRESS */
+.progress-bar {
+  display: flex; gap: 8px; margin-bottom: 32px; width: 100%; max-width: 400px;
+}
+.progress-step {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: var(--border); transition: background 0.3s;
+}
+.progress-step.done  { background: var(--gold); }
+.progress-step.active { background: var(--gold); opacity: 0.5; }
+
+/* CARD */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 24px 20px;
+  width: 100%; max-width: 400px;
+}
+.step { display: none; }
+.step.active { display: block; }
+
+.step-label {
+  font-size: 0.65rem; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+.step-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.8rem; letter-spacing: 3px; color: var(--text);
+  margin-bottom: 6px; line-height: 1.1;
+}
+.step-desc {
+  font-size: 0.8rem; color: var(--muted2); margin-bottom: 24px; line-height: 1.5;
+}
+
+/* INPUTS */
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 0.72rem; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 7px;
+}
+.field input, .field select {
+  width: 100%; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem; padding: 12px 14px; outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus, .field select:focus { border-color: var(--gold); }
+.field select option { background: #1a1a1e; }
+
+.player-field input { border-left: 3px solid var(--border); transition: border-color 0.2s, border-left-color 0.2s; }
+.player-field.p1 input:focus { border-color: var(--blue); border-left-color: var(--blue); }
+.player-field.p2 input:focus { border-color: var(--pink); border-left-color: var(--pink); }
+
+/* PREVIEW */
+.name-preview {
+  display: flex; justify-content: center; align-items: center; gap: 16px;
+  margin: 20px 0 4px; opacity: 0; transition: opacity 0.3s;
+}
+.name-preview.visible { opacity: 1; }
+.preview-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem; letter-spacing: 2px;
+}
+.preview-vs {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.9rem; color: var(--muted); letter-spacing: 2px;
+}
+
+/* STAKES */
+.stakes-tier {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 14px; margin-bottom: 10px;
+}
+.tier-label {
+  font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 10px; font-weight: 600;
+}
+.tier-label.low  { color: var(--green); }
+.tier-label.mid  { color: var(--gold); }
+.tier-label.high { color: var(--pink); }
+.tier-gap {
+  font-size: 0.7rem; color: var(--muted); margin-bottom: 10px;
+}
+.tier-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tier-row .field { margin-bottom: 0; }
+.tier-row .field label { font-size: 0.6rem; margin-bottom: 5px; }
+.tier-row .field input { font-size: 0.82rem; padding: 9px 10px; }
+
+/* DAYS */
+.day-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 4px;
+}
+.day-btn {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--muted2); cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 0.65rem;
+  padding: 10px 4px; text-align: center; transition: all 0.15s;
+  letter-spacing: 0.5px;
+}
+.day-btn.selected {
+  background: rgba(245,197,66,0.12); border-color: var(--gold);
+  color: var(--gold); font-weight: 600;
+}
+.reset-note {
+  font-size: 0.72rem; color: var(--muted); text-align: center;
+  margin-top: 10px; min-height: 18px;
+}
+
+/* BUTTONS */
+.btn-row { display: flex; gap: 10px; margin-top: 24px; }
+.btn {
+  flex: 1; border: none; border-radius: 10px; cursor: pointer;
+  font-family: 'Bebas Neue', sans-serif; font-size: 1.05rem;
+  letter-spacing: 2px; padding: 13px; transition: opacity 0.2s, transform 0.1s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-back {
+  background: var(--surface2); color: var(--muted);
+  border: 1px solid var(--border); flex: 0 0 80px;
+}
+.btn-next { background: var(--gold); color: #000; }
+.btn-launch { background: var(--green); color: #000; }
+
+/* SUCCESS */
+#success-screen {
+  display: none; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center; padding: 20px;
+  max-width: 400px; width: 100%;
+}
+#success-screen .check { font-size: 3rem; margin-bottom: 16px; }
+#success-screen h2 {
+  font-family: 'Bebas Neue', sans-serif; font-size: 2rem;
+  letter-spacing: 4px; color: var(--green); margin-bottom: 8px;
+}
+#success-screen p { color: var(--muted2); font-size: 0.85rem; line-height: 1.6; }
+.spinner {
+  width: 20px; height: 20px; border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000; border-radius: 50%;
+  animation: spin 0.7s linear infinite; display: inline-block; margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="logo">HousePoints</div>
+<div class="logo-sub">Setup Wizard</div>
+
+<div class="progress-bar" id="progress-bar">
+  <div class="progress-step active" id="prog-0"></div>
+  <div class="progress-step" id="prog-1"></div>
+  <div class="progress-step" id="prog-2"></div>
+</div>
+
+<div class="card" id="wizard-card">
+
+  <!-- Step 1: Player Names -->
+  <div class="step active" id="step-0">
+    <div class="step-label">Step 1 of 3</div>
+    <div class="step-title">Who's Playing?</div>
+    <div class="step-desc">Enter the names of both players. These will appear on the scoreboard.</div>
+
+    <div class="field player-field p1">
+      <label>Player 1</label>
+      <input type="text" id="p1-input" placeholder="e.g. Alex" maxlength="20" autocomplete="off" oninput="updatePreview()">
+    </div>
+    <div class="field player-field p2">
+      <label>Player 2</label>
+      <input type="text" id="p2-input" placeholder="e.g. Jordan" maxlength="20" autocomplete="off" oninput="updatePreview()">
+    </div>
+
+    <div class="name-preview" id="name-preview">
+      <span class="preview-name" id="preview-p1" style="color:var(--blue)">Alex</span>
+      <span class="preview-vs">VS</span>
+      <span class="preview-name" id="preview-p2" style="color:var(--pink)">Jordan</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-next" onclick="goTo(1)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Reset Day -->
+  <div class="step" id="step-1">
+    <div class="step-label">Step 2 of 3</div>
+    <div class="step-title">Week Reset Day</div>
+    <div class="step-desc">Pick which day the weekly scores reset and stakes are settled.</div>
+
+    <div class="day-grid" id="day-grid"></div>
+    <div class="reset-note" id="reset-note"></div>
+
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goTo(0)">←</button>
+      <button class="btn btn-next" onclick="goTo(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Stakes -->
+  <div class="step" id="step-2">
+    <div class="step-label">Step 3 of 3</div>
+    <div class="step-title">Weekly Stakes</div>
+    <div class="step-desc">What does the winner get? Stakes scale with the point gap at end of week.</div>
+
+    <div class="stakes-tier">
+      <div class="tier-label low">Low Stakes</div>
+      <div class="tier-gap">1–3 point gap</div>
+      <div class="tier-row">
+        <div class="field"><label>Winner Gets</label><input id="low-win" value="Pick the show"></div>
+        <div class="field"><label>Loser Owes</label><input id="low-lose" value="Buys a coffee"></div>
+      </div>
+    </div>
+
+    <div class="stakes-tier">
+      <div class="tier-label mid">Mid Stakes</div>
+      <div class="tier-gap">4–7 point gap</div>
+      <div class="tier-row">
+        <div class="field"><label>Winner Gets</label><input id="mid-win" value="Chore-free morning"></div>
+        <div class="field"><label>Loser Owes</label><input id="mid-lose" value="Solo bedtime routine"></div>
+      </div>
+    </div>
+
+    <div class="stakes-tier">
+      <div class="tier-label high">High Stakes</div>
+      <div class="tier-gap">8+ point gap</div>
+      <div class="tier-row">
+        <div class="field"><label>Winner Gets</label><input id="high-win" value="Full lazy day"></div>
+        <div class="field"><label>Loser Owes</label><input id="high-lose" value="Handles all chores for a day"></div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-back" onclick="goTo(1)">←</button>
+      <button class="btn btn-launch" id="launch-btn" onclick="launch()">Launch →</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Success -->
+<div id="success-screen">
+  <div class="check">✅</div>
+  <h2>You're All Set</h2>
+  <p id="success-msg">Loading HousePoints…</p>
+</div>
+
+<script>
+const DAYS_MAP = [
+  { label: 'Mon', value: 1 },
+  { label: 'Tue', value: 2 },
+  { label: 'Wed', value: 3 },
+  { label: 'Thu', value: 4 },
+  { label: 'Fri', value: 5 },
+  { label: 'Sat', value: 6 },
+  { label: 'Sun', value: 7 },
+];
+const DAY_NAMES = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+let selectedResetDay = 1;
+
+// Build day grid
+const grid = document.getElementById('day-grid');
+DAYS_MAP.forEach(d => {
+  const btn = document.createElement('button');
+  btn.className = 'day-btn' + (d.value === 1 ? ' selected' : '');
+  btn.textContent = d.label;
+  btn.onclick = () => selectDay(d.value);
+  btn.id = 'day-' + d.value;
+  grid.appendChild(btn);
+});
+updateResetNote();
+
+function selectDay(v) {
+  selectedResetDay = v;
+  DAYS_MAP.forEach(d => {
+    document.getElementById('day-' + d.value).classList.toggle('selected', d.value === v);
+  });
+  updateResetNote();
+}
+
+function updateResetNote() {
+  const name = DAY_NAMES[selectedResetDay - 1];
+  document.getElementById('reset-note').textContent = `Scores reset every ${name}`;
+}
+
+function updatePreview() {
+  const p1 = document.getElementById('p1-input').value.trim();
+  const p2 = document.getElementById('p2-input').value.trim();
+  const preview = document.getElementById('name-preview');
+  if (p1 || p2) {
+    document.getElementById('preview-p1').textContent = p1 || 'Player 1';
+    document.getElementById('preview-p2').textContent = p2 || 'Player 2';
+    preview.classList.add('visible');
+  } else {
+    preview.classList.remove('visible');
+  }
+}
+
+function goTo(step) {
+  if (step === 1) {
+    const p1 = document.getElementById('p1-input').value.trim();
+    const p2 = document.getElementById('p2-input').value.trim();
+    if (!p1 || !p2) {
+      const empty = !p1 ? 'p1-input' : 'p2-input';
+      document.getElementById(empty).focus();
+      document.getElementById(empty).style.borderColor = 'var(--red)';
+      setTimeout(() => document.getElementById(empty).style.borderColor = '', 1200);
+      return;
+    }
+  }
+
+  document.querySelectorAll('.step').forEach((s, i) => s.classList.toggle('active', i === step));
+  document.querySelectorAll('.progress-step').forEach((p, i) => {
+    p.classList.toggle('done',   i < step);
+    p.classList.toggle('active', i === step);
+    p.classList.remove('done');
+    if (i < step)  p.classList.add('done');
+    if (i === step) p.classList.add('active');
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function launch() {
+  const p1 = document.getElementById('p1-input').value.trim();
+  const p2 = document.getElementById('p2-input').value.trim();
+
+  const body = {
+    player1:  p1 || 'Player 1',
+    player2:  p2 || 'Player 2',
+    resetDay: selectedResetDay,
+    stakes: {
+      low:  { winnerGets: document.getElementById('low-win').value.trim()  || 'Pick the show',         loserOwes: document.getElementById('low-lose').value.trim()  || 'Buys a coffee' },
+      mid:  { winnerGets: document.getElementById('mid-win').value.trim()  || 'Chore-free morning',     loserOwes: document.getElementById('mid-lose').value.trim()  || 'Solo bedtime routine' },
+      high: { winnerGets: document.getElementById('high-win').value.trim() || 'Full lazy day',          loserOwes: document.getElementById('high-lose').value.trim() || 'Handles all chores for a day' },
+    }
+  };
+
+  const btn = document.getElementById('launch-btn');
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!data.ok) throw new Error('Setup failed');
+
+    document.getElementById('wizard-card').style.display = 'none';
+    document.getElementById('progress-bar').style.display = 'none';
+    const s = document.getElementById('success-screen');
+    s.style.display = 'flex';
+    document.getElementById('success-msg').textContent =
+      `${body.player1} vs ${body.player2} — let the games begin.`;
+
+    setTimeout(() => { window.location.href = '/'; }, 1800);
+  } catch(e) {
+    btn.innerHTML = 'Launch →';
+    btn.disabled = false;
+    alert('Something went wrong. Please try again.');
+  }
+}
+</script>
+</body>
+</html>
