@@ -1,3 +1,7 @@
+Here's the README:
+
+---
+
 # HousePoints
 
 A two-player chore tracker with weekly stakes. Log chores, earn points, keep score — the winner picks what they're owed.
