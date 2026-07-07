@@ -6,6 +6,10 @@ HousePoints is a small chore scoreboard for two people. Log chores, earn points,
 
 It is built for couples or roommates who want something self-hosted and simple instead of another subscription app.
 
+| Setup wizard | Scoreboard | History |
+|:---:|:---:|:---:|
+| ![Setup wizard](screenshots/setup.png) | ![Scoreboard](screenshots/scoreboard.png) | ![History](screenshots/history.png) |
+
 ## Features
 
 - Quick chore logging with 1, 2, or 3 point presets
@@ -98,4 +102,4 @@ All stakes can be changed during setup.
 
 ## License
 
-MIT
+[MIT](LICENSE)
