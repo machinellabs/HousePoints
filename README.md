@@ -19,22 +19,39 @@ It is built for couples or roommates who want something self-hosted and simple i
 - JSON backup download
 - Local network sharing for two devices on the same Wi-Fi
 
-## Quick start
+## How to run it
+
+### Install
 
 ```bash
 git clone https://github.com/machinellabs/HousePoints.git
 cd HousePoints
 npm install
-npm start
 ```
 
-Open `http://localhost:3000` and complete the setup wizard:
+### Configure
+
+No environment variables are required. On first launch, complete the setup wizard:
 
 - Player names
 - Week reset day
 - Low, mid, and high stakes for each point gap
 
+### Run
+
+```bash
+npm start
+```
+
+Open `http://localhost:3000` in a browser.
+
 To use it from another phone or computer, open the LAN URL printed in the terminal, such as `http://192.168.x.x:3000`, while both devices are on the same Wi-Fi network.
+
+### Test
+
+```bash
+npm test
+```
 
 ## Stakes
 
