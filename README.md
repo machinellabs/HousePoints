@@ -1,73 +1,65 @@
-Here's the README:
-
----
-
 # HousePoints
 
-A two-player chore tracker with weekly stakes. Log chores, earn points, keep score — the winner picks what they're owed.
+[![CI](https://github.com/machinellabs/HousePoints/actions/workflows/ci.yml/badge.svg)](https://github.com/machinellabs/HousePoints/actions/workflows/ci.yml)
 
-Built for couples or roommates who want a lightweight, self-hosted scoreboard without subscriptions or apps.
+A two-player chore tracker with weekly stakes. Log chores, earn points, keep score, and let the weekly winner pick the reward.
 
----
+Built for couples or roommates who want a lightweight, self-hosted scoreboard without subscriptions, accounts, or app-store friction.
+
+## What this demonstrates
+
+- **Practical product thinking** - turns a real household workflow into a focused app with setup, rules, history, and backup flows.
+- **Full-stack fundamentals** - Express REST API, static single-page frontend, and flat-file JSON persistence.
+- **Local-first design** - runs on a trusted home network and keeps personal household data on the machine running it.
+- **Mobile-first UI** - designed around phone usage, quick entry, and repeat daily interactions.
 
 ## Features
 
-- **Point-based chore logging** — quick-add chips (1, 2, or 3 pts) plus custom chore entries
-- **Live scoreboard** — real-time point totals, animated progress bar, and weekly leader banner
-- **Streak tracker** — consecutive weekly wins shown per player
-- **Weekly summary** — point breakdown and stakes outcome at a glance
-- **Chore schedule** — assign recurring chores by day with color-coded owner view
-- **History log** — full filterable chore history with delete support
-- **Rules tab** — stakes tiers, point values, and household agreement in one place
-- **Backup** — one-click download of your full data as JSON
-- **Mobile-first UI** — dark theme, bottom nav, designed for phone use
-- **Two-device friendly** — runs on your local network; both players connect via browser
+- **Point-based chore logging** - quick-add chips for 1, 2, or 3 points plus custom chore entries
+- **Live scoreboard** - real-time point totals, animated progress bar, and weekly leader banner
+- **Streak tracker** - consecutive weekly wins shown per player
+- **Weekly summary** - point breakdown and stakes outcome at a glance
+- **Chore schedule** - assign recurring chores by day with color-coded owner view
+- **History log** - full filterable chore history with delete support
+- **Rules tab** - stakes tiers, point values, and household agreement in one place
+- **Backup** - one-click download of full app data as JSON
+- **Two-device friendly** - both players can connect through a browser on the same Wi-Fi network
 
----
-
-## Quick Start
+## Quick start
 
 ```bash
-git clone https://github.com/your-username/HousePoints.git
+git clone https://github.com/machinellabs/HousePoints.git
 cd HousePoints
 npm install
 npm start
 ```
 
-On first run, a setup wizard prompts you for:
+On first run, open `http://localhost:3000` and complete the browser setup wizard:
 
 - Player 1 and Player 2 names
-- Week reset day (Monday–Sunday)
-- Weekly stakes (3 tiers based on point gap: low / mid / high)
+- Week reset day, Monday through Sunday
+- Weekly stakes across low, mid, and high point gaps
 
-After setup, the server starts automatically at `http://localhost:3000`.
-
-To share with your partner: open the URL printed in the terminal (e.g. `http://192.168.x.x:3000`) on their phone while both devices are on the same WiFi.
-
----
+To share with the second player, open the LAN URL printed in the terminal, such as `http://192.168.x.x:3000`, from another phone or computer on the same Wi-Fi network.
 
 ## Stakes
 
-Stakes are set during setup and displayed in the Rules tab. Three tiers based on how wide the weekly point gap is:
+Stakes are set during setup and displayed in the Rules tab. Three tiers are based on the weekly point gap:
 
-| Gap | Default: Winner Gets | Default: Loser Owes |
-|-----|----------------------|---------------------|
-| 1–3 pts | Pick the show | Buys a coffee |
-| 4–7 pts | Chore-free morning | Solo bedtime routine |
+| Gap | Default winner reward | Default loser owes |
+|-----|-----------------------|--------------------|
+| 1-3 pts | Pick the show | Buys a coffee |
+| 4-7 pts | Chore-free morning | Solo bedtime routine |
 | 8+ pts | Full lazy day | Handles all chores for a day |
 
-All stakes are fully customizable during setup.
-
----
+All stakes are customizable during setup.
 
 ## Scripts
 
 | Command | Description |
 |---------|-------------|
-| `npm start` | Run setup wizard (first time only), then start the server |
-| `npm run setup` | Re-run the setup wizard and reset config + data |
-
----
+| `npm start` | Start the app server |
+| `npm test` | Run JavaScript syntax checks for the server and setup script |
 
 ## Data
 
@@ -77,25 +69,20 @@ All stakes are fully customizable during setup.
 | `config.json` | Player names, week reset day, and stakes |
 | `data.template.json` | Schema reference for the data file |
 
-Both `data.json` and `config.json` are gitignored — they stay local. Back up your data from the app's **Backup** tab or by copying `data.json` manually.
-
----
+Both `data.json` and `config.json` are gitignored so private household data stays local. Backups can be downloaded from the app or made by copying `data.json`.
 
 ## Stack
 
-- **Node.js + Express** — REST API with flat-file JSON persistence (no database)
-- **Vanilla JS** — single-page app, no build step, no framework
-- **Google Fonts** — Bebas Neue + DM Sans
+- **Node.js + Express** - REST API with flat-file JSON persistence
+- **Vanilla JavaScript** - single-page app with no build step
+- **HTML/CSS** - responsive mobile-first interface
+- **Google Fonts** - Bebas Neue + DM Sans
 
----
+## Self-hosting notes
 
-## Self-Hosting Notes
-
-- The server binds to `0.0.0.0:3000` so it's reachable from other devices on your network
-- There is no authentication — intended for trusted local network use only
-- To run on startup, use a process manager like `pm2` or a systemd service
-
----
+- The server binds to `0.0.0.0:3000` so it is reachable from other devices on your local network
+- There is no authentication; this is intended for a trusted local network
+- To run on startup, use a process manager such as `pm2` or a systemd service
 
 ## License
 
